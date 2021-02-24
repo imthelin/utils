@@ -1,0 +1,97 @@
+<!--
+ * @Description: 处理粘贴问题，可以进行自定义处理函数，比如转为金钱格式、转大写、格式化数据等，目前展示的是转大写
+ * @Author: GangLin.Chen
+ * @Date: 2021-02-24 15:42:33
+ * @LastEditors: GangLin.Chen
+ * @LastEditTime: 2021-02-24 18:10:54
+ * @FilePath: /utils/copy-paste/index.html
+ * @filePathColon: \\
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <style>
+    .wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: space-evenly;
+      flex-direction: column;
+      width: 50%;
+      height: 400px;
+      margin: 20px auto;
+      background-color: lightblue;
+      border-radius: 6px;
+    }
+    div.source,
+    div.target {
+      width: 80%;
+      overflow: hidden;
+      border: 1px solid gray;
+      margin: 0.5rem;
+      padding: 0.5rem;
+      height: 1rem;
+      border-radius: inherit;
+      background-color: #e9eef1;
+    }
+  </style>
+  <body>
+    <div class="wrapper">
+      <!-- contenteditable 使得这个 div 可以编辑 -->
+      <div class="source" contenteditable="true">
+        Try copying text from this box...
+      </div>
+      <div class="target" contenteditable="true">
+        ...and pasting it into this one, which gonna to be deal
+      </div>
+    </div>
+  </body>
+  <script>
+    // map 配置自定义函数
+    const funcHandlerMapSource = [
+      [
+        'UP_CASE',
+        function (val) {
+          return String.prototype.toUpperCase.call(val)
+        }
+      ],
+      // 替换行为，比如 v-html 高亮命中
+      [
+        'REPLACE_AIM_TO_HIGH',
+        function (val, target) {
+          let reg = new RegExp(`${target}`, 'gim')
+          let str = val.replace(reg, val => {
+            return `<span style="color: red">${val}</span>`
+          })
+          return str
+        }
+      ]
+    ]
+    const funcHandlerMap = new Map(funcHandlerMapSource)
+
+    const target = document.querySelector('div.target')
+
+    // 在目标元素上监听粘贴事件
+    target.addEventListener('paste', e => {
+      // 从事件上得到粘贴文本数据
+      // !!! ie 不支持 clipboardData
+      let pasteValue = (e.clipboardData || window.clipboardData).getData('text')
+
+      // 得到数据处理函数
+      let handler = funcHandlerMap.get('REPLACE_AIM_TO_HIGH')
+      // 命中 0  并高亮
+      pasteValue = handler(pasteValue, 0)
+
+      const selection = window.getSelection()
+      if (!selection.rangeCount) return
+      selection.deleteFromDocument()
+      selection.getRangeAt(0).insertNode(document.createTextNode(pasteValue))
+
+      e.preventDefault()
+    })
+  </script>
+</html>
