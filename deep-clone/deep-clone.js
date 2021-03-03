@@ -37,6 +37,7 @@ const getType = function (val) {
   return Object.prototype.toString.call(val)
 }
 const getConstructor = function (source) {
+  // 此处利用了原型链去访问这个对象的原型（Object.getPrototypeOf(source)/__proto__）上的的 constructor
   let theConstructor = source.constructor
   return theConstructor
 }
@@ -69,7 +70,7 @@ const deepClone = function (source, map = new WeakMap()) {
   // 克隆 WeakMap / Map
   if (type === tag.weakMap || type === tag.map) {
     source.foreach((value, key) => {
-      copyingData.set(key, deepClone(value))
+      copyingData.set(key, deepClone(value, map))
     })
     return copyingData
   }
@@ -77,7 +78,7 @@ const deepClone = function (source, map = new WeakMap()) {
   // 克隆 WeakSet / Set
   if (type === tag.weakSet || type === tag.set) {
     source.foreach(value => {
-      copyingData.add(deepClone(value))
+      copyingData.add(deepClone(value, map))
     })
     return copyingData
   }
